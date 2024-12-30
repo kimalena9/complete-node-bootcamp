@@ -1,6 +1,8 @@
 const express = require('express');
 const morgan = require('morgan');
 
+const globalErrorHandler = require('./controllers/errorController');
+const AppError = require('./utils/appError');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 
@@ -30,14 +32,18 @@ app.use((req, res, next) => {
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 
+// "catch-all" route handler, the final middleware to handle all incoming requests that do not match any of the predefined routes in the application
 // applies to all HTTP methods for a specific route or path
 app.all('*', (req, res, next) => {
-  res.status(404).json({
-    status: 'fail',
-    // req.url -> path after any router has been applied
-    // req.originalUrl -> represents the original path of the request, regardless of routing
-    message: `Can't find ${req.originalUrl} on this server!`,
-  });
+  // req.url -> path after any router has been applied
+  // req.originalUrl -> represents the original path of the request, regardless of routing
+  // const err = new Error(`Can't find ${req.originalUrl} on this server!`);
+  // err.status = 'fail';
+  // err.statusCode = 404;
+  // next(err);
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
+
+app.use(globalErrorHandler);
 
 module.exports = app;
